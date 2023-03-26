@@ -19,7 +19,7 @@ function App() {
 
   const [winnings, setWinnings] = useState(0);
   const [betAmount, setBetAmount] = useState(0.01);
-  const [betType, setBetType] = useState(0);
+  const [betType, setBetType] = useState(5);
   const [number, setNumber] = useState(0);
   const [status, setStatus] = useState("");
   // const [minBet, setMinBet] = useState(null);
@@ -114,19 +114,21 @@ function App() {
      
   
       try {
-        await contract.bet(number, betType).send(({
+       const tx = await contract.test(number, betType,({
       from:account,
-      value:web3.utils.toWei(value,"ether")
-    })
-);
+      value:value
+    }));
+    const bets = await contract.bets(tx);
+    setBets(bets);
         setStatus("Bet placed successfully!");
       } catch (err) {
+        console.log(contract)
         console.log(err)
         setStatus("Error placing bet.");
       }
   
-      const bets = await contract.bets();
-      setBets(bets);
+      // const bets = await contract.bets(tx);
+      // setBets(bets);
       const balance = await web3.eth.getBalance(contract.address);
       setBalance(balance);
       const winnings = await contract.winnings(account);
@@ -167,12 +169,12 @@ function App() {
     <label>
       Bet Type:
       <select value={betType} onChange={(e) => setBetType(e.target.value)}>
-        <option value={0}>Number</option>
+        <option value={5}>Number</option>
         <option value={1}>Color</option>
         <option value={2}>Even/Odd</option>
       </select>
     </label>
-    {betType === 0 && (
+    {betType === 5 && (
       <label>
         Number:
         <input type="number" min="0" max="36" value={number} onChange={(e) => setNumber(e.target.value)} />

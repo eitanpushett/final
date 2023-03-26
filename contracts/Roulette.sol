@@ -162,7 +162,18 @@ contract Roulette {
     necessaryBalance = 0;
     nextRoundTimestamp = block.timestamp;
     payouts = [2,3,3,2,2,36];
-    numberRange = [1,2,2,1,1,36];
+
+    //times payout for each win type
+
+    numberRange = [1,2,2,1,1,36];   
+
+    // Bet type 0: black/red (1=black, 2=red)
+    // Bet type 1: column (1=left, 2=middle, 3=right)
+    // Bet type 2: dozen (1=1st dozen, 2=2nd dozen, 3=3rd dozen)
+    // Bet type 3: 18s (1=low 18s, 2=high 18s)
+    // Bet type 4: even/odd (1=odd, 2=even)
+    // Bet type 5: number (1-36)
+
     betAmount = 10000000000000000; /* 0.01 ether */
     maxAmountAllowedInTheBank = 2000000000000000000; /* 2 ether */
   }
@@ -183,21 +194,24 @@ contract Roulette {
     
   function addEther() payable public {}
 
+  
+   
   function bet(uint8 number, uint8 betType) payable public {
-    /* 
+
+       /* 
        A bet is valid when:
        1 - the value of the bet is correct (=betAmount)
        2 - betType is kblock.timestampn (between 0 and 5)
        3 - the option betted is valid (don't bet on 37!)
        4 - the bank has sufficient funds to pay the bet
     */
-    require(msg.value == betAmount);                               // 1
-    require(betType >= 0 && betType <= 5);                         // 2
-    require(number >= 0 && number <= numberRange[betType]);        // 3
+
+    require(msg.value == betAmount, "Incorrect bet amount"); // Check that the bet value is correct
+    require(betType >= 0 && betType <= 5, "Invalid bet type"); // Check that the bet type is valid
+    require(number >= 0 && number <= numberRange[betType], "Invalid number"); // Check that the number is valid
     uint payoutForThisBet = payouts[betType] * msg.value;
     uint provisionalBalance = necessaryBalance + payoutForThisBet;
-    require(provisionalBalance < address(this).balance);           // 4
-    /* we are good to go */
+    require(provisionalBalance < address(this).balance, "Insufficient balance"); // Check that the bank has sufficient funds to pay the bet
     necessaryBalance += payoutForThisBet;
     bets.push(Bet({
       betType: betType,
@@ -205,6 +219,7 @@ contract Roulette {
       number: number
     }));
   }
+
 
   function spinWheel() public {
     /* are there any bets? */
