@@ -16,10 +16,10 @@ function App() {
   const [account, setAccount] = useState(null);
 
   const [bets, setBets] = useState([]);
-
+  const [winner,setWinner] =useState([])
   const [winnings, setWinnings] = useState(0);
   const [betAmount, setBetAmount] = useState(0.01);
-  const [betType, setBetType] = useState(5);
+  const [betType, setBetType] = useState(0);
   const [number, setNumber] = useState(0);
   const [status, setStatus] = useState("");
   // const [minBet, setMinBet] = useState(null);
@@ -92,7 +92,19 @@ function App() {
     web3Api.web3 && getAccount();
   }, [web3Api.web3]);
 
-    
+
+
+  // useEffect(() => {
+  //   const {contract,web3} = web3Api
+  //   const getWinner = async () => {
+  //   // const bets = await contract.bets(account);
+  //   // setBets(bets);
+  //   // console.log(bets)
+  //     const winners = await contract.getWinners();
+  //     setWinner(winners);
+  //   };
+  //   web3Api.web3 && getWinner();
+  // }, [web3Api.web3]);
   
     useEffect(() => {
       const loadWinnigs = async () => {
@@ -114,11 +126,11 @@ function App() {
      
   
       try {
-       const tx = await contract.test(number, betType,({
+        await contract.bet(number, betType,({
       from:account,
       value:value
     }));
-    const bets = await contract.bets(tx);
+    const bets = await contract.bets(account);
     setBets(bets);
         setStatus("Bet placed successfully!");
       } catch (err) {
@@ -126,13 +138,11 @@ function App() {
         console.log(err)
         setStatus("Error placing bet.");
       }
-  
-      // const bets = await contract.bets(tx);
-      // setBets(bets);
+
       const balance = await web3.eth.getBalance(contract.address);
-      setBalance(balance);
-      const winnings = await contract.winnings(account);
-      setWinnings(winnings);
+      setBalance(web3.utils.fromWei(balance, "ether"))
+      // const winnings = await contract.winnings(account);
+      // setWinnings(winnings);
     };
   
     const handleSpin = async () => {
@@ -144,19 +154,25 @@ function App() {
         setStatus("Error spinning wheel.");
       }
   
-      const bets = await contract.bets();
+      const bets = await contract.methods.bets();
       setBets(bets);
       const balance = await web3.eth.getBalance(contract.address);
-      setBalance(balance);
-      const winnings = await contract.winnings(account);
-      setWinnings(winnings);
+      setBalance(web3.utils.fromWei(balance, "ether"));
+      // const winnings = await contract.winnings(account);
+      // setWinnings(winnings);
     };
+
   
     return (
       <div>
         <h1>Roulette</h1>
 
         <div>Check that your account is {account}</div>
+        {winner.map((winner) => (
+        <p key={winner}>{winner}</p>
+      ))}
+      <div>Check that your winenr is {winner}</div>
+
         <p>Balance: {balance} ETH</p>
         <p>Winnings: {winnings} ETH</p>
         <form onSubmit={handleBet}>
@@ -168,16 +184,39 @@ function App() {
     <br />
     <label>
       Bet Type:
-      <select value={betType} onChange={(e) => setBetType(e.target.value)}>
-        <option value={5}>Number</option>
-        <option value={1}>Color</option>
-        <option value={2}>Even/Odd</option>
+      <select value={betType} onChange={(e) => {
+        setBetType(parseInt(e.target.value))
+        }
+        }>
+        <option value={0}>Color</option>
+        <option value={1}>Even/Odd</option>
+        <option value={2}>Number</option>
       </select>
     </label>
-    {betType === 5 && (
+    {betType === 2 && (
       <label>
         Number:
         <input type="number" min="0" max="36" value={number} onChange={(e) => setNumber(e.target.value)} />
+      </label>
+    )}
+    {betType === 1 && (
+      <label>
+        Odd/Even:
+        <select value={number} onChange={(e) => setNumber(e.target.value)}>
+        <option value={0}>Odd</option>
+        <option value={1}>Even</option>
+        </select>
+      </label>
+    )}
+
+
+    {betType === 0 && (
+      <label>
+        Black/Red:
+        <select value={number} onChange={(e) => setNumber(e.target.value)}>
+        <option value={0}>Black</option>
+        <option value={1}>Red</option>
+        </select>
       </label>
     )}
     <br />
@@ -188,13 +227,13 @@ function App() {
   <br />
   <p>{status}</p>
   <h2>Bets</h2>
-  <ul>
+  {/* <ul>
     {bets.map((bet, index) => (
       <li key={index}>
         {bet.amount} ETH on {bet.number !== undefined ? `number ${bet.number}` : bet.color !== undefined ? `color ${bet.color}` : bet.evenOdd === 0 ? "even" : "odd"}
       </li>
     ))}
-  </ul>
+  </ul> */}
 </div>);
 
        
