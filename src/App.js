@@ -14,14 +14,15 @@ function App() {
 
   const [balance, setBalance] = useState(null);
   const [account, setAccount] = useState(null);
-
-  const [bets, setBets] = useState([]);
-  const [winner,setWinner] =useState([])
   const [winnings, setWinnings] = useState(0);
+  const [bets, setBets] = useState([]);
+  const [winners,setWinners] =useState([])
   const [betAmount, setBetAmount] = useState(0.01);
   const [betType, setBetType] = useState(0);
   const [number, setNumber] = useState(0);
   const [status, setStatus] = useState("");
+
+
   // const [minBet, setMinBet] = useState(null);
   // const [number, setNumber] = useState(0);
   // const [amount, setAmount] = useState(0);
@@ -71,6 +72,7 @@ function App() {
     }
     loadProvider()
   }, [])
+
 
 
 
@@ -126,53 +128,54 @@ function App() {
      
   
       try {
-        await contract.bet(number, betType,({
+      await contract.bet(number, betType,({
       from:account,
       value:value
     }));
-    const bets = await contract.bets(account);
-    setBets(bets);
         setStatus("Bet placed successfully!");
       } catch (err) {
-        console.log(contract)
         console.log(err)
         setStatus("Error placing bet.");
       }
+    
 
-      const balance = await web3.eth.getBalance(contract.address);
+    const balance = await web3.eth.getBalance(contract.address);
       setBalance(web3.utils.fromWei(balance, "ether"))
       // const winnings = await contract.winnings(account);
       // setWinnings(winnings);
     };
-  
+
+
+      useEffect(() => {
+        const loadBets = async () => {
+          const {contract} = web3Api
+          const bets = await contract.getBets();
+          setBets(bets);
+        };
+    
+        web3Api.contract && loadBets();
+      }, [web3Api,account,balance,winners]);
+    
+
     const handleSpin = async () => {
       const {contract,web3} = web3Api
       try {
-        await contract.spinWheel().send({ from: account });
+        await contract.spinWheel();
         setStatus("Wheel spun successfully!");
       } catch (err) {
         setStatus("Error spinning wheel.");
       }
-  
-      const bets = await contract.methods.bets();
-      setBets(bets);
       const balance = await web3.eth.getBalance(contract.address);
       setBalance(web3.utils.fromWei(balance, "ether"));
-      // const winnings = await contract.winnings(account);
-      // setWinnings(winnings);
+      const winners = await contract.getWinners();
+      setWinners(winners);
     };
 
   
     return (
       <div>
         <h1>Roulette</h1>
-
         <div>Check that your account is {account}</div>
-        {winner.map((winner) => (
-        <p key={winner}>{winner}</p>
-      ))}
-      <div>Check that your winenr is {winner}</div>
-
         <p>Balance: {balance} ETH</p>
         <p>Winnings: {winnings} ETH</p>
         <form onSubmit={handleBet}>
@@ -208,8 +211,6 @@ function App() {
         </select>
       </label>
     )}
-
-
     {betType === 0 && (
       <label>
         Black/Red:
@@ -227,13 +228,22 @@ function App() {
   <br />
   <p>{status}</p>
   <h2>Bets</h2>
-  {/* <ul>
+  <ul>
     {bets.map((bet, index) => (
       <li key={index}>
-        {bet.amount} ETH on {bet.number !== undefined ? `number ${bet.number}` : bet.color !== undefined ? `color ${bet.color}` : bet.evenOdd === 0 ? "even" : "odd"}
+        {Web3.utils.fromWei(bet.betAmount, "ether")} ETH on {bet.betType === '2' ? `Number ${bet.number}` : bet.betType === '0' && bet.number === '1' ? "Red" : bet.betType === '0' && bet.number === '0' ? "Black" : bet.betType === '1' && bet.number === '1' ? "Even" : bet.betType === '1' && bet.number === '0' ? "Odd" : ""}
       </li>
     ))}
-  </ul> */}
+  </ul>
+  <ul>
+    {winners.map((winner, index) => (
+      <li key={index}>
+        Winners are {winner.winner} amount won {winner.winnings}
+      </li>
+    ))}
+  </ul>
+     
+
 </div>);
 
        

@@ -14,7 +14,6 @@ contract Roulette {
   mapping(address => bool) public winners;
   mapping(uint => address) private lutWinners;
   mapping(address => uint) public winnings;
-  //mapping (address => uint256) winnings;
   uint8[] payouts;
   uint8[] numberRange;
   uint8[] red;
@@ -41,6 +40,7 @@ contract Roulette {
     address player;
     uint8 betType;
     uint8 number;
+    uint256 betAmount;
   }
   Bet[] public bets;
 
@@ -58,50 +58,19 @@ contract Roulette {
     payouts = [2,2,36];
     red = [32,19,21,25,34,27,36,30,23,5,16,1,14,9,18,7,12,3];
     black = [15, 4, 2, 17, 6, 13, 11, 8, 10, 24, 33, 20, 31, 22, 29, 28, 35, 26];
-    RedBlack()
-    // blacks.add(2);
-    // blacks.add(4);
-    // blacks.add(6);
-    // blacks.add(8);
-    // blacks.add(10);
-    // blacks.add(11);
-    // blacks.add(13);
-    // blacks.add(15);
-    // blacks.add(17);
-    // blacks.add(20);
-    // blacks.add(22);
-    // blacks.add(24);
-    // blacks.add(26);
-    // blacks.add(28);
-    // blacks.add(29);
-    // blacks.add(31);
-    // blacks.add(33);
-    // blacks.add(35);
-      // reds.add(1);
-    // reds.add(3);
-    // reds.add(5);
-    // reds.add(7);
-    // reds.add(9);
-    // reds.add(12);
-    // reds.add(14);
-    // reds.add(16);
-    // reds.add(18);
-    // reds.add(19);
-    // reds.add(21);
-    // reds.add(23);
-    // reds.add(25);
-    // reds.add(27);
-    // reds.add(30);
-    // reds.add(32);
-    // reds.add(34);
-    // reds.add(36);
+    RedBlack();
+    
+
+    
+    
+
 
 
     
 
     //times payout for each win type
 
-    numberRange = [1,1,36];   
+   numberRange = [1,1,36];
 
     // Bet type 0: black/red (1=black, 2=red)
     // Bet type 1: even/odd (1=odd, 2=even)
@@ -139,9 +108,15 @@ contract Roulette {
 
 
   //must run when start server in order to have eth in contract  
-  function addEther() payable public {}
+   function addEther() payable public {}
 
   
+  function getBets() public view returns (Bet[] memory) {
+    return bets;
+}
+
+
+
    
   function bet(uint8 number, uint8 betType) payable public {
 
@@ -163,7 +138,8 @@ contract Roulette {
     Bet memory newBet = Bet({
       betType: betType,
       player: msg.sender,
-      number: number
+      number: number,
+      betAmount : msg.value
     });
     bets.push(newBet);
   }
