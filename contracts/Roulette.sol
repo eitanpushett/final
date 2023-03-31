@@ -78,7 +78,7 @@ contract Roulette {
     // Bet type 2: number (1-36)
 
      betAmount = 10000000000000000; /* 0.01 ether */
-     maxAmountAllowedInTheBank = 20000000000000000000; /* 20 ether */
+     maxAmountAllowedInTheBank = 3000000000000000000; /* 3 ether */
   }
 
   
