@@ -18,6 +18,7 @@ contract Roulette {
   uint8[] numberRange;
   uint8[] red;
   uint8[] black;
+  uint256 public latestWinningNumber;
     
   using EnumerableSet for EnumerableSet.UintSet;
 
@@ -116,9 +117,16 @@ contract Roulette {
 }
 
 
+function getCreator() public view returns (address) {
+    return creator;
+}
+
+
+
 
    
   function bet(uint8 number, uint8 betType) payable public {
+
 
        /* 
        A bet is valid when:
@@ -143,6 +151,13 @@ contract Roulette {
     });
     bets.push(newBet);
   }
+
+
+  function getWinnings(address player) public view returns (uint) {
+    return winnings[player];
+}
+
+
 
 
   function spinWheel() public {
@@ -206,11 +221,16 @@ contract Roulette {
     /* reset necessaryBalance */
     necessaryBalance = 0;
     /* check if to much money in the bank */
-    //if (address(this).balance > maxAmountAllowedInTheBank) takeProfits();
+    if (address(this).balance > maxAmountAllowedInTheBank) takeProfits();
     /* returns 'random' number to UI */
     emit RandomNumber(number);
+    latestWinningNumber = number;
   }
 
+
+function getLatestWinningNumber() public view returns (uint256) {
+        return latestWinningNumber;
+    }
 
 
 function getWinners() public view returns (Winner[] memory) {

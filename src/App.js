@@ -21,36 +21,9 @@ function App() {
   const [betType, setBetType] = useState(0);
   const [number, setNumber] = useState(0);
   const [status, setStatus] = useState("");
+  const [winningNumber , setWinningNumber] = useState('0')
+  const [showWinningNumber, setShowWinningNumber] = useState(false);
 
-
-  // const [minBet, setMinBet] = useState(null);
-  // const [number, setNumber] = useState(0);
-  // const [amount, setAmount] = useState(0);
-  // const [message, setMessage] = useState("");
-  // const [winningNumber, setWinningNumber] = useState(0);
-
-  // const [deposit, setDeposit] = useState('');
-  // const [withdrawAmount, setWithdrawAmount] = useState('');
-
-  // function handelDeposit(e){
-  //   setDeposit(e.target.value)
-  // }
-
-  // function handelWithdrawAmount(e){
-  //   setWithdrawAmount(e.target.value)
-  // }
-  // const addFunds = async () => {
-  //   const {contract,web3} = web3Api
-  //   await contract.addFunds({
-  //     from:account,
-  //     value:web3.utils.toWei(deposit,"ether")
-  //   })
-  // }
-  // const withDraw = async () => {
-  //   const {contract,web3} = web3Api
-  //   const withDrawAmount = web3.utils.toWei(withdrawAmount,"ether")
-  //   await contract.withdraw(withDrawAmount, {from:account})
-  // }
 
   useEffect(() => {
     const loadProvider = async () => {
@@ -73,7 +46,7 @@ function App() {
     loadProvider()
   }, [])
 
-
+  
 
 
   useEffect(
@@ -86,27 +59,15 @@ function App() {
       web3Api.contract && loadBalance()
     },[web3Api])
 
+
   useEffect(() => {
     const getAccount = async () => {
-      const accounts = await web3Api.web3.eth.getAccounts();
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
       setAccount(accounts[0]);
     };
     web3Api.web3 && getAccount();
-  }, [web3Api.web3]);
+  }, [web3Api.web3,]);
 
-
-
-  // useEffect(() => {
-  //   const {contract,web3} = web3Api
-  //   const getWinner = async () => {
-  //   // const bets = await contract.bets(account);
-  //   // setBets(bets);
-  //   // console.log(bets)
-  //     const winners = await contract.getWinners();
-  //     setWinner(winners);
-  //   };
-  //   web3Api.web3 && getWinner();
-  // }, [web3Api.web3]);
   
     useEffect(() => {
       const loadWinnigs = async () => {
@@ -124,9 +85,6 @@ function App() {
       e.preventDefault();
   
       const value = web3.utils.toWei(betAmount.toString(), "ether");
-
-     
-  
       try {
       await contract.bet(number, betType,({
       from:account,
@@ -137,12 +95,8 @@ function App() {
         console.log(err)
         setStatus("Error placing bet.");
       }
-    
-
     const balance = await web3.eth.getBalance(contract.address);
       setBalance(web3.utils.fromWei(balance, "ether"))
-      // const winnings = await contract.winnings(account);
-      // setWinnings(winnings);
     };
 
 
@@ -159,25 +113,33 @@ function App() {
 
     const handleSpin = async () => {
       const {contract,web3} = web3Api
+      const creator = await contract.getCreator();
       try {
-        await contract.spinWheel();
+        await contract.spinWheel({from: creator});
         setStatus("Wheel spun successfully!");
       } catch (err) {
         setStatus("Error spinning wheel.");
       }
+
+      const winningNumber = await contract.getLatestWinningNumber();
+      setWinningNumber(winningNumber);
+      
+
+      setShowWinningNumber(true);
       const balance = await web3.eth.getBalance(contract.address);
       setBalance(web3.utils.fromWei(balance, "ether"));
       const winners = await contract.getWinners();
       setWinners(winners);
     };
 
+
   
     return (
       <div>
         <h1>Roulette</h1>
-        <div>Check that your account is {account}</div>
-        <p>Balance: {balance} ETH</p>
-        <p>Winnings: {winnings} ETH</p>
+        <div>Betting account: {account}</div>
+        <p>Contract Balance: {balance} ETH</p>
+        <p>Your winnings: {winnings} ETH</p>
         <form onSubmit={handleBet}>
     <h2>Place a Bet</h2>
     <label>
@@ -225,6 +187,7 @@ function App() {
   </form>
   <br />
   <button onClick={handleSpin}>Spin the Wheel</button>
+  {showWinningNumber && <p>Winning number is {winningNumber.words[winningNumber.words.length-2]}</p>}
   <br />
   <p>{status}</p>
   <h2>Bets</h2>
@@ -238,11 +201,15 @@ function App() {
   <ul>
     {winners.map((winner, index) => (
       <li key={index}>
-        Winners are {winner.winner} amount won {winner.winnings}
+        Winners are {winner.winner} amount won {Web3.utils.fromWei(winner.winnings, "ether")}
       </li>
     ))}
   </ul>
-     
+  <div>
+      
+      
+      {/* render other UI components */}
+    </div>
 
 </div>);
 
