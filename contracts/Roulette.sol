@@ -266,12 +266,7 @@ function getWinners() public view returns (Winner[] memory) {
     if (amount > 0) payable(address(creator)).transfer(amount);
   }
   
-  function creatorKill() public {
-    require(msg.sender == creator);
-    address payable payableCreator = payable(creator);
-    selfdestruct(payableCreator);
 
-  }
 
   
  
