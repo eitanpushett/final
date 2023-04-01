@@ -23,7 +23,7 @@ function App() {
   const [status, setStatus] = useState("");
   const [winningNumber , setWinningNumber] = useState('0')
   const [showWinningNumber, setShowWinningNumber] = useState(false);
-
+  const [shouldRenderWinners, setshouldRenderWinners] = useState(false);
 
   useEffect(() => {
     const loadProvider = async () => {
@@ -46,7 +46,26 @@ function App() {
     loadProvider()
   }, [])
 
-  
+
+  useEffect(() => {
+    // Listen for changes in the selected account
+    window.ethereum.on('accountsChanged', handleAccountsChanged);
+
+    // Cleanup function
+    return () => {
+      if (window.ethereum.removeListener) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      } else {
+        window.ethereum.off('accountsChanged', handleAccountsChanged);
+      }
+    }
+  }, []);
+
+
+  const handleAccountsChanged = (accounts) => {
+    setAccount(accounts[0]);
+  }
+
 
 
   useEffect(
@@ -72,18 +91,18 @@ function App() {
     useEffect(() => {
       const loadWinnigs = async () => {
         const {contract,web3} = web3Api
-        const winnings = await contract.getStatus();
-        //const winnings = await contract.winnings(account);
+        const winnings = await contract.getStatus({from: account});
         setWinnings(web3.utils.fromWei(winnings[4], "ether"));
       };
   
       web3Api.contract && loadWinnigs();
-    }, [web3Api,account]);
+    }, [web3Api,account,bets]);
   
     const handleBet = async (e) => {
       const {contract,web3} = web3Api
       e.preventDefault();
-  
+      setShowWinningNumber(false);
+      setshouldRenderWinners(false);
       const value = web3.utils.toWei(betAmount.toString(), "ether");
       try {
       await contract.bet(number, betType,({
@@ -113,9 +132,8 @@ function App() {
 
     const handleSpin = async () => {
       const {contract,web3} = web3Api
-      const creator = await contract.getCreator();
       try {
-        await contract.spinWheel({from: creator});
+        await contract.spinWheel({from: account});
         setStatus("Wheel spun successfully!");
       } catch (err) {
         setStatus("Error spinning wheel.");
@@ -124,13 +142,23 @@ function App() {
       const winningNumber = await contract.getLatestWinningNumber();
       setWinningNumber(winningNumber);
       
-
+      setshouldRenderWinners(true);
       setShowWinningNumber(true);
       const balance = await web3.eth.getBalance(contract.address);
       setBalance(web3.utils.fromWei(balance, "ether"));
       const winners = await contract.getWinners();
       setWinners(winners);
+
     };
+
+
+    const betsByPlayer = bets.reduce((acc, bet) => {
+      if (!acc[bet.player]) {
+        acc[bet.player] = [];
+      }
+      acc[bet.player].push(bet);
+      return acc;
+    }, {});
 
 
   
@@ -140,6 +168,7 @@ function App() {
         <div>Betting account: {account}</div>
         <p>Contract Balance: {balance} ETH</p>
         <p>Your winnings: {winnings} ETH</p>
+        <p>Number of active bets: {bets.length}</p>
         <form onSubmit={handleBet}>
     <h2>Place a Bet</h2>
     <label>
@@ -190,14 +219,30 @@ function App() {
   {showWinningNumber && <p>Winning number is {winningNumber.words[winningNumber.words.length-2]}</p>}
   <br />
   <p>{status}</p>
-  <h2>Bets</h2>
-  <ul>
-    {bets.map((bet, index) => (
-      <li key={index}>
-        {Web3.utils.fromWei(bet.betAmount, "ether")} ETH on {bet.betType === '2' ? `Number ${bet.number}` : bet.betType === '0' && bet.number === '1' ? "Red" : bet.betType === '0' && bet.number === '0' ? "Black" : bet.betType === '1' && bet.number === '1' ? "Even" : bet.betType === '1' && bet.number === '0' ? "Odd" : ""}
-      </li>
-    ))}
-  </ul>
+  {Object.entries(betsByPlayer).map(([player, bets]) => (
+  <div key={player}>
+    <p>Bets made by {player}</p>
+    <ul>
+      {bets.map((bet, index) => (
+        <li key={index}>
+          Bet: {Web3.utils.fromWei(bet.betAmount, "ether")} ETH on{" "}
+          {bet.betType === "2"
+            ? `Number ${bet.number}`
+            : bet.betType === "0" && bet.number === "1"
+            ? "Red"
+            : bet.betType === "0" && bet.number === "0"
+            ? "Black"
+            : bet.betType === "1" && bet.number === "1"
+            ? "Even"
+            : bet.betType === "1" && bet.number === "0"
+            ? "Odd"
+            : ""}
+        </li>
+      ))}
+    </ul>
+  </div>
+))}
+  {shouldRenderWinners && (
   <ul>
     {winners.map((winner, index) => (
       <li key={index}>
@@ -205,11 +250,7 @@ function App() {
       </li>
     ))}
   </ul>
-  <div>
-      
-      
-      {/* render other UI components */}
-    </div>
+)}
 
 </div>);
 

@@ -51,6 +51,8 @@ contract Roulette {
     address winner;
     uint winnings;
 }
+
+Winner[] public spinWinners;
   
   constructor()  payable {
     creator = msg.sender;
@@ -111,6 +113,7 @@ contract Roulette {
   //must run when start server in order to have eth in contract  
    function addEther() payable public {}
 
+
   
   function getBets() public view returns (Bet[] memory) {
     return bets;
@@ -167,6 +170,8 @@ function getCreator() public view returns (address) {
     require(block.timestamp > nextRoundTimestamp);
     /* next time we are allowed to spin the wheel again */
     nextRoundTimestamp = block.timestamp;
+    /* delete privious spin list of winners*/
+    delete spinWinners;
     /* calculate 'random' number */
     uint diff = block.difficulty;
     bytes32 hash = blockhash(block.number-1);
@@ -207,12 +212,19 @@ function getCreator() public view returns (address) {
         address winner = b.player;
        if(!winners[winner]){
         uint index = numberOfWinners++;
+
         winners[winner] = true;
         lutWinners[index] = winner;
+
         }
         uint payout = payouts[b.betType] * betAmount;
        winnings[winner] += payout;
-       }
+        Winner memory newWinner = Winner({
+          winner : winner,
+          winnings : payout
+          });
+          spinWinners.push(newWinner);
+        }
     }
     
 
@@ -234,13 +246,18 @@ function getLatestWinningNumber() public view returns (uint256) {
 
 
 function getWinners() public view returns (Winner[] memory) {
-    Winner[] memory winnerList = new Winner[](numberOfWinners);
-    for (uint i = 0; i < numberOfWinners; i++) {
-        winnerList[i].winner = lutWinners[i];
-        winnerList[i].winnings = winnings[winnerList[i].winner];
-    }
-    return winnerList;
+    //Winner[] memory winnerList = new Winner[](spinWinners.length);
+    // for (uint i = 0; i < spinWinners.length; i++) {
+    //     winnerList[i].winner = spin[i];
+    //     winnerList[i].winnings = spinWinnings[winnerList[i].winner];
+    // }
+    return spinWinners;
 }
+
+
+
+
+
 
   
 
