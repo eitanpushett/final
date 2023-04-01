@@ -169,7 +169,7 @@ function getCreator() public view returns (address) {
     /* are we allowed to spin the wheel? */
     require(block.timestamp > nextRoundTimestamp);
     /* next time we are allowed to spin the wheel again */
-    nextRoundTimestamp = block.timestamp;
+    nextRoundTimestamp = block.timestamp + 1 minutes;
     /* delete privious spin list of winners*/
     delete spinWinners;
     /* calculate 'random' number */
@@ -246,11 +246,7 @@ function getLatestWinningNumber() public view returns (uint256) {
 
 
 function getWinners() public view returns (Winner[] memory) {
-    //Winner[] memory winnerList = new Winner[](spinWinners.length);
-    // for (uint i = 0; i < spinWinners.length; i++) {
-    //     winnerList[i].winner = spin[i];
-    //     winnerList[i].winnings = spinWinnings[winnerList[i].winner];
-    // }
+
     return spinWinners;
 }
 

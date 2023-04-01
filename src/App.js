@@ -24,6 +24,11 @@ function App() {
   const [winningNumber , setWinningNumber] = useState('0')
   const [showWinningNumber, setShowWinningNumber] = useState(false);
   const [shouldRenderWinners, setshouldRenderWinners] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(0);
+
+
+
 
   useEffect(() => {
     const loadProvider = async () => {
@@ -148,8 +153,28 @@ function App() {
       setBalance(web3.utils.fromWei(balance, "ether"));
       const winners = await contract.getWinners();
       setWinners(winners);
+      
 
     };
+
+    const startCountdown = () => {
+      setRemainingTime(60);
+      setIsButtonDisabled(true);
+    };
+  
+    useEffect(() => {
+      let intervalId;
+      if (remainingTime > 0) {
+        intervalId = setInterval(() => {
+          setRemainingTime((prevTime) => prevTime - 1);
+        }, 1000);
+      } else {
+        setIsButtonDisabled(false);
+      }
+  
+      return () => clearInterval(intervalId);
+    }, [remainingTime]);
+  
 
 
     const betsByPlayer = bets.reduce((acc, bet) => {
@@ -160,6 +185,21 @@ function App() {
       return acc;
     }, {});
 
+      
+    
+      async function handleCashOut() {
+        const {contract} = web3Api
+        try {
+          
+            await contract.cashOut({ from: account });
+        } catch (error) {
+          console.error(error);
+        }
+        setWinnings(0)
+      }
+
+
+
 
   
     return (
@@ -168,6 +208,9 @@ function App() {
         <div>Betting account: {account}</div>
         <p>Contract Balance: {balance} ETH</p>
         <p>Your winnings: {winnings} ETH</p>
+          {winnings > 0 && (
+            <button onClick={handleCashOut}>Claim winnings</button>
+          )}
         <p>Number of active bets: {bets.length}</p>
         <form onSubmit={handleBet}>
     <h2>Place a Bet</h2>
@@ -215,7 +258,15 @@ function App() {
     <button type="submit">Place Bet</button>
   </form>
   <br />
-  <button onClick={handleSpin}>Spin the Wheel</button>
+  <button onClick={() => {
+          handleSpin();
+          startCountdown();
+        }} disabled={isButtonDisabled}>Spin the Wheel</button>
+  {isButtonDisabled && (
+        <p>
+          You will be able to spin again in {remainingTime} second{remainingTime !== 1 && "s"}.
+        </p>
+      )}
   {showWinningNumber && <p>Winning number is {winningNumber.words[winningNumber.words.length-2]}</p>}
   <br />
   <p>{status}</p>
