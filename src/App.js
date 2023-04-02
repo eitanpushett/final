@@ -199,19 +199,32 @@ function App() {
       }
 
 
-
+      function BetInfo({ account, balance, winnings, handleCashOut, bets }) {
+        return (
+          <div>
+            <div>Betting account: {account}</div>
+            <p>Contract Balance: {balance} ETH</p>
+            <p>Your winnings: {winnings} ETH</p>
+            {winnings > 0 && (
+              <button onClick={handleCashOut}>Claim winnings</button>
+            )}
+            <p>Number of active bets: {bets.length}</p>
+          </div>
+        );
+      }
+      
 
   
     return (
       <div>
         <h1>Roulette</h1>
-        <div>Betting account: {account}</div>
-        <p>Contract Balance: {balance} ETH</p>
-        <p>Your winnings: {winnings} ETH</p>
-          {winnings > 0 && (
-            <button onClick={handleCashOut}>Claim winnings</button>
-          )}
-        <p>Number of active bets: {bets.length}</p>
+        <BetInfo
+    account={account}
+    balance={balance}
+    winnings={winnings}
+    handleCashOut={handleCashOut}
+    bets={bets}
+  />
         <form onSubmit={handleBet}>
     <h2>Place a Bet</h2>
     <label>
@@ -302,59 +315,7 @@ function App() {
     ))}
   </ul>
 )}
-
 </div>);
-
-       
-  
-
-
-
-
-
-
-  // return (
-  //   <div>
-  //     <h1>Roulette Contract</h1>
-  //     <div>Check that your account is {account}</div>
-  //     <p>Balance: {balance} Ether</p>
-
-
-
-
-
-
-  //     /* <p>Number of active bets: {numberOfBets}</p>
-  //     <p>Value of active bets: {valueOfBets}</p>
-  //     <p>Roulette balance: {rouletteBalance}</p>
-  //     <p>Player winnings: {playerWinnings}</p> */
-
-  //     /* <h2>Place Your Bet</h2>
-  //     <form onSubmit={(e) => { e.preventDefault(); placeBet(); }}>
-  //       <label>
-  //         Number (0-36):
-  //         <input type="number" min="0" max="36" value={number} onChange={(e) => setNumber(e.target.value)} />
-  //       </label>
-  //       <br />
-  //       <label>
-  //         Amount (in Ether):
-  //         <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} />
-  //       </label>
-  //       <br />
-  //       <button type="submit">Place Bet</button>
-  //     </form>
-  //     <p>{message}</p>
-  //     <h2>Trigger Payout</h2>
-  //     <form onSubmit={(e) => { e.preventDefault(); triggerPayout(); }}>
-  //       <label>
-  //         Winning Number (0-36):
-  //         <input type="number" min="0" max="36" value={winningNumber} onChange={(e) => setWinningNumber(e.target.value)} />
-  //       </label>
-  //       <br />
-  //       <button type="submit">Trigger Payout</button>
-  //     </form> */
-  // //   </div>
-  // // );
 
     }
 export default App;
