@@ -1,11 +1,11 @@
 # Getting Started with Project
 
 Run the following commands to install needed packages:
-
-  ```npm install @openzeppelin/contracts
+```
+  npm install @openzeppelin/contracts
   
   npm install @metamask/detect-provider
-
+```
 Make sure your react version is v16.18.0 (run "node -v")
 
 # Starting the contract
