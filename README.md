@@ -2,7 +2,7 @@
 
 Run the following commands to install needed packages:
 
-  npm install @openzeppelin/contracts
+  ```npm install @openzeppelin/contracts
   
   npm install @metamask/detect-provider
 
