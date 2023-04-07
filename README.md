@@ -5,6 +5,9 @@ Run the following commands to install needed packages:
   npm install @openzeppelin/contracts
   
   npm install @metamask/detect-provider
+  
+  npm install react-toastify@7.0.4
+  
 ```
 Make sure your react version is v16.18.0 (run "node -v")
 
