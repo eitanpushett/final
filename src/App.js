@@ -176,6 +176,7 @@ function App() {
       const winners = await contract.getWinners();
       
       setWinners(mergeWinners(winners));
+      setnecessaryBalance(0);
       
 
     };
