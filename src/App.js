@@ -1,9 +1,14 @@
 import './App.css';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+
 import { useState } from 'react';
 import { useEffect } from 'react';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { loadContract } from './utils/load-contract';
 import Web3 from 'web3';
+
+
 
 function App() {
   const [web3Api, setWeb3Api] = useState({
@@ -11,21 +16,21 @@ function App() {
     web3: null,
     contract: null
   })
-
+  const payouts = [2,2,36];
   const [balance, setBalance] = useState(null);
   const [account, setAccount] = useState(null);
   const [winnings, setWinnings] = useState(0);
   const [bets, setBets] = useState([]);
   const [winners,setWinners] =useState([])
-  const [betAmount, setBetAmount] = useState(0.01);
+  const [betAmount, setBetAmount] = useState('');
   const [betType, setBetType] = useState(0);
   const [number, setNumber] = useState(0);
-  const [status, setStatus] = useState("");
   const [winningNumber , setWinningNumber] = useState('0')
   const [showWinningNumber, setShowWinningNumber] = useState(false);
   const [shouldRenderWinners, setshouldRenderWinners] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
+  const [necessaryBalance, setnecessaryBalance] = useState(0);
 
 
 
@@ -90,7 +95,7 @@ function App() {
       setAccount(accounts[0]);
     };
     web3Api.web3 && getAccount();
-  }, [web3Api.web3,]);
+  }, [web3Api.web3]);
 
   
     useEffect(() => {
@@ -103,22 +108,37 @@ function App() {
       web3Api.contract && loadWinnigs();
     }, [web3Api,account,bets]);
   
-    const handleBet = async (e) => {
+    const handleBet = async (event) => {
+      event.preventDefault();
       const {contract,web3} = web3Api
-      e.preventDefault();
+      const currentBalance = await web3.eth.getBalance(contract.address)
       setShowWinningNumber(false);
       setshouldRenderWinners(false);
-      const value = web3.utils.toWei(betAmount.toString(), "ether");
+      if (!/^\d+(\.\d+)?$/.test(betAmount)) {
+          toast.error("Invalid bet amount. Please enter only numbers.");
+          return;
+      }
+      const value = await web3.utils.toWei(betAmount, "ether");
+      const payoutForThisBet = payouts[betType] * value;
+      const provisionalBalance = necessaryBalance + payoutForThisBet + winnings;
+  
+       if (provisionalBalance >= currentBalance) {
+        toast.error("Insufficient contract balance, please enter new lower bet amount");
+        return; // Return early to cancel the submission
+      }
       try {
       await contract.bet(number, betType,({
       from:account,
       value:value
     }));
-        setStatus("Bet placed successfully!");
+    toast.success('Bet placed successfully!', {
+      position: toast.POSITION.TOP_RIGHT
+  });;
       } catch (err) {
         console.log(err)
-        setStatus("Error placing bet.");
+        toast.error("Error placing bet.");
       }
+      setnecessaryBalance(necessaryBalance+payoutForThisBet);
     const balance = await web3.eth.getBalance(contract.address);
       setBalance(web3.utils.fromWei(balance, "ether"))
     };
@@ -139,9 +159,11 @@ function App() {
       const {contract,web3} = web3Api
       try {
         await contract.spinWheel({from: account});
-        setStatus("Wheel spun successfully!");
+        toast.success('Wheel spun successfully!', {
+          position: toast.POSITION.TOP_RIGHT
+      });
       } catch (err) {
-        setStatus("Error spinning wheel.");
+        toast.error("Error spinning wheel.");
       }
 
       const winningNumber = await contract.getLatestWinningNumber();
@@ -152,7 +174,8 @@ function App() {
       const balance = await web3.eth.getBalance(contract.address);
       setBalance(web3.utils.fromWei(balance, "ether"));
       const winners = await contract.getWinners();
-      setWinners(winners);
+      
+      setWinners(mergeWinners(winners));
       
 
     };
@@ -161,6 +184,33 @@ function App() {
       setRemainingTime(60);
       setIsButtonDisabled(true);
     };
+
+
+    function mergeWinners(winners) {
+      const mergedWinners = [];
+      const winnerL = {};
+    
+      winners.forEach(([winner, winnings]) => {
+        if (winnerL[winner]) {
+          // If the username already exists, add the amount to the existing entry
+          winnerL[winner].winnings += parseFloat(winnings);
+        } else {
+          // If the username doesn't exist, create a new entry
+          winnerL[winner] = { winner, winnings: parseFloat(winnings) };
+          mergedWinners.push(winnerL[winner]);
+        }
+      });
+    
+      // Convert the winnings for each winner back to a string
+      mergedWinners.forEach((winner) => {
+        winner.winnings = winner.winnings.toString();
+      });
+    
+      return mergedWinners;
+    }
+
+
+
   
     useEffect(() => {
       let intervalId;
@@ -199,25 +249,26 @@ function App() {
       }
 
 
-      function BetInfo({ account, balance, winnings, handleCashOut, bets }) {
+      function BetInfo({ account, balance, winnings, handleCashOut, bets, maxBetAmount }) {
         return (
           <div>
-            <div>Betting account: {account}</div>
-            <p>Contract Balance: {balance} ETH</p>
-            <p>Your winnings: {winnings} ETH</p>
+            <div className='betting_account'>Betting account: {account}</div>
+            {/* <br></br> */}
+            <div className='summary'>
+              <p className='contract_balance'>Contract Balance: {balance} ETH</p>
+              <p className='your_winnings'>Your winnings: {winnings} ETH</p>
+              <p className='numOfActvBets'>Number of active bets: {bets.length}</p>
             {winnings > 0 && (
-              <button onClick={handleCashOut}>Claim winnings</button>
+              <button onClick={handleCashOut} className='ClaimWinBTN'>Claim winnings</button>
             )}
-            <p>Number of active bets: {bets.length}</p>
+          </div>
           </div>
         );
       }
-      
-
-  
+    
     return (
-      <div>
-        <h1>Roulette</h1>
+        <div className='main'>
+        <h1 className='roulette' data-text='Roulette'>Roulette</h1>
         <BetInfo
     account={account}
     balance={balance}
@@ -225,14 +276,15 @@ function App() {
     handleCashOut={handleCashOut}
     bets={bets}
   />
-        <form onSubmit={handleBet}>
-    <h2>Place a Bet</h2>
-    <label>
+  
+        <form onSubmit={handleBet} >
+        <h2 className='placeBet'>Place a Bet</h2>
+    <label className='amount'>
       Amount (in ETH):
-      <input type="number" step="0.01" value={betAmount} onChange={(e) => setBetAmount(e.target.value)} />
+      <input  value={betAmount} onChange={(e) => setBetAmount(e.target.value)}/>
     </label>
     <br />
-    <label>
+    <label className='betType'>
       Bet Type:
       <select value={betType} onChange={(e) => {
         setBetType(parseInt(e.target.value))
@@ -244,49 +296,49 @@ function App() {
       </select>
     </label>
     {betType === 2 && (
-      <label>
+      <label className='betTypePickNumber'>
         Number:
         <input type="number" min="0" max="36" value={number} onChange={(e) => setNumber(e.target.value)} />
       </label>
     )}
     {betType === 1 && (
-      <label>
+      <label className='betTypePickOddEven'>
         Odd/Even:
         <select value={number} onChange={(e) => setNumber(e.target.value)}>
-        <option value={0}>Odd</option>
-        <option value={1}>Even</option>
+        <option value={1}>Odd</option>
+        <option value={0}>Even</option>
         </select>
       </label>
     )}
     {betType === 0 && (
-      <label>
-        Black/Red:
+      <label className='betTypePickBlackRed'>
+        Black/<span className='RedTitle'>Red</span>:
         <select value={number} onChange={(e) => setNumber(e.target.value)}>
-        <option value={0}>Black</option>
-        <option value={1}>Red</option>
+        <option value={0} className='black'>Black</option>
+        <option value={1} className='red'>Red</option>
         </select>
       </label>
     )}
     <br />
-    <button type="submit">Place Bet</button>
+    <button type="submit" className='placeBetBTN'>Place Bet</button>
+    <ToastContainer /> {/* <- add line */}
   </form>
   <br />
   <button onClick={() => {
           handleSpin();
           startCountdown();
-        }} disabled={isButtonDisabled}>Spin the Wheel</button>
+        }} disabled={isButtonDisabled} className="spinBTN">Spin the Wheel</button>
   {isButtonDisabled && (
-        <p>
-          You will be able to spin again in {remainingTime} second{remainingTime !== 1 && "s"}.
+        <p className='SpinAgainTimer'>
+          You will be able to spin again <span className='Timer'>{remainingTime}</span> second{remainingTime !== 1 && "s"}.
         </p>
       )}
-  {showWinningNumber && <p>Winning number is {winningNumber.words[winningNumber.words.length-2]}</p>}
+  {showWinningNumber && <p className='winningNumberBottomText'>Winning number is {winningNumber.words[winningNumber.words.length-2]}</p>}
   <br />
-  <p>{status}</p>
   {Object.entries(betsByPlayer).map(([player, bets]) => (
   <div key={player}>
-    <p>Bets made by {player}</p>
-    <ul>
+    <p className='betConfirm'>Bets made by {player}</p>
+    <ul className='betLog'>
       {bets.map((bet, index) => (
         <li key={index}>
           Bet: {Web3.utils.fromWei(bet.betAmount, "ether")} ETH on{" "}
@@ -296,9 +348,9 @@ function App() {
             ? "Red"
             : bet.betType === "0" && bet.number === "0"
             ? "Black"
-            : bet.betType === "1" && bet.number === "1"
-            ? "Even"
             : bet.betType === "1" && bet.number === "0"
+            ? "Even"
+            : bet.betType === "1" && bet.number === "1"
             ? "Odd"
             : ""}
         </li>
@@ -310,7 +362,7 @@ function App() {
   <ul>
     {winners.map((winner, index) => (
       <li key={index}>
-        Winners are {winner.winner} amount won {Web3.utils.fromWei(winner.winnings, "ether")}
+      {winner.winner} won! amount won {Web3.utils.fromWei(winner.winnings, "ether")}
       </li>
     ))}
   </ul>

@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract Roulette {
   
-  uint betAmount;
+  uint256 betAmount;
   uint necessaryBalance;
   uint nextRoundTimestamp;
   address creator;
@@ -58,29 +58,16 @@ Winner[] public spinWinners;
     creator = msg.sender;
     necessaryBalance = 0;
     nextRoundTimestamp = block.timestamp;
-    payouts = [2,2,36];
     red = [32,19,21,25,34,27,36,30,23,5,16,1,14,9,18,7,12,3];
     black = [15, 4, 2, 17, 6, 13, 11, 8, 10, 24, 33, 20, 31, 22, 29, 28, 35, 26];
     RedBlack();
-    
-
-    
-    
-
-
-
-    
-
+    payouts = [2,2,36];
     //times payout for each win type
-
    numberRange = [1,1,36];
-
     // Bet type 0: black/red (1=black, 2=red)
     // Bet type 1: even/odd (1=odd, 2=even)
     // Bet type 2: number (1-36)
-
-     betAmount = 10000000000000000; /* 0.01 ether */
-     maxAmountAllowedInTheBank = 3000000000000000000; /* 3 ether */
+     maxAmountAllowedInTheBank = 30000000000000000000; /* 30 ether */
   }
 
   
@@ -125,6 +112,10 @@ function getCreator() public view returns (address) {
 }
 
 
+function getMaxBet() public view returns (uint) {
+        return betAmount;
+    }
+
 
 
    
@@ -139,8 +130,8 @@ function getCreator() public view returns (address) {
        4 - the bank has sufficient funds to pay the bet
     */
 
-    require(msg.value == betAmount, "Incorrect bet amount"); // Check that the bet value is correct
-    require(betType >= 0 && betType <= 5, "Invalid bet type"); // Check that the bet type is valid
+    
+    require(betType >= 0 && betType <= 2, "Invalid bet type"); // Check that the bet type is valid
     require(number >= 0 && number <= numberRange[betType], "Invalid number"); // Check that the number is valid
     uint payoutForThisBet = payouts[betType] * msg.value;
     uint provisionalBalance = necessaryBalance + payoutForThisBet;
@@ -195,13 +186,12 @@ function getCreator() public view returns (address) {
           won = (number % 2 == 1);
           }              /* bet on odd */
          }
-          else if (b.betType == 0) {                   
-            if (isBlack(b.number)) {                     /* bet on black */
+          else if (b.betType == 0) {  
+            if (b.number == 0 && isBlack(number))    /* bet on black */
+            {                    
               won = true;
-          } else {                                                 /* bet on red */
-            if (isRed(b.number)) {
+          } else if (b.number == 1 && isRed(number)){                                                 /* bet on red */
               won = true;
-          }
         }
       }
     }
@@ -217,8 +207,8 @@ function getCreator() public view returns (address) {
         lutWinners[index] = winner;
 
         }
-        uint payout = payouts[b.betType] * betAmount;
-       winnings[winner] += payout;
+        uint payout = payouts[b.betType] * b.betAmount;
+        winnings[winner] += payout;
         Winner memory newWinner = Winner({
           winner : winner,
           winnings : payout
