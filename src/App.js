@@ -31,6 +31,10 @@ function App() {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
   const [necessaryBalance, setnecessaryBalance] = useState(0);
+  const [winningColour,setWinningColour] = useState('')
+
+  const red = [32,19,21,25,34,27,36,30,23,5,16,1,14,9,18,7,12,3];
+  const black = [15, 4, 2, 17, 6, 13, 11, 8, 10, 24, 33, 20, 31, 22, 29, 28, 35, 26];
 
 
 
@@ -50,7 +54,7 @@ function App() {
         )
       }
       else {
-        console.log("Pleas install MetaMask")
+        toast.error("Please install MetaMask")
       }
     }
     loadProvider()
@@ -86,7 +90,7 @@ function App() {
         setBalance(web3.utils.fromWei(balance, "ether"))
       }
       web3Api.contract && loadBalance()
-    },[web3Api])
+    },[web3Api, handleCashOut])
 
 
   useEffect(() => {
@@ -120,9 +124,10 @@ function App() {
       }
       const value = await web3.utils.toWei(betAmount, "ether");
       const payoutForThisBet = payouts[betType] * value;
-      const provisionalBalance = necessaryBalance + payoutForThisBet + winnings;
+      let provisionalBalance = necessaryBalance + payoutForThisBet + winnings;
   
        if (provisionalBalance >= currentBalance) {
+        provisionalBalance = 0;
         toast.error("Insufficient contract balance, please enter new lower bet amount");
         return; // Return early to cancel the submission
       }
@@ -167,6 +172,8 @@ function App() {
       }
 
       const winningNumber = await contract.getLatestWinningNumber();
+      const winningColour = getLatestColour(winningNumber);
+      setWinningColour(winningColour);
       setWinningNumber(winningNumber);
       
       setshouldRenderWinners(true);
@@ -185,6 +192,17 @@ function App() {
       setRemainingTime(60);
       setIsButtonDisabled(true);
     };
+
+
+    function getLatestColour(num){
+      if (red.includes(parseInt(num)) ){
+      return "red";
+    } else if (black.includes(parseInt(num))) {
+      return "black";
+    } else  {
+      return "green";
+    }
+    }
 
 
     function mergeWinners(winners) {
@@ -247,6 +265,7 @@ function App() {
           console.error(error);
         }
         setWinnings(0)
+
       }
 
 
@@ -334,7 +353,7 @@ function App() {
           You will be able to spin again <span className='Timer'>{remainingTime}</span> second{remainingTime !== 1 && "s"}.
         </p>
       )}
-  {showWinningNumber && <p className='winningNumberBottomText'>Winning number is {winningNumber.words[winningNumber.words.length-2]}</p>}
+  {showWinningNumber && <p className='winningNumberBottomText'>Winning number is {winningNumber.words[winningNumber.words.length-2]} {winningColour} </p>}
   <br />
   {Object.entries(betsByPlayer).map(([player, bets]) => (
   <div key={player}>
@@ -363,7 +382,9 @@ function App() {
   <ul>
     {winners.map((winner, index) => (
       <li key={index}>
-      {winner.winner} won! amount won {Web3.utils.fromWei(winner.winnings, "ether")}
+      {winner.winner} won!
+      amount won {Web3.utils.fromWei(winner.winnings, "ether")}
+      <br/>
       </li>
     ))}
   </ul>

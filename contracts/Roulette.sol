@@ -240,11 +240,6 @@ function getWinners() public view returns (Winner[] memory) {
     return spinWinners;
 }
 
-
-
-
-
-
   
 
     function isRed(uint number) public view returns (bool) {
