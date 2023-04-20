@@ -10,7 +10,7 @@ Run the following commands to install needed packages:
   
 ```
 
-Start you ganache and add the truffle-config.js file
+Start your ganache and add the truffle-config.js file
 
 Make sure your react version is v16.18.0 (run "node -v")
 
