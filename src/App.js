@@ -115,7 +115,7 @@ function App() {
     const handleBet = async (event) => {
       event.preventDefault();
       const {contract,web3} = web3Api
-      const currentBalance = await web3.eth.getBalance(contract.address)
+      const currentBalance = (parseFloat(await web3.eth.getBalance(contract.address))/1000000000000000000)
       setShowWinningNumber(false);
       setshouldRenderWinners(false);
       if (!/^\d+(\.\d+)?$/.test(betAmount)) {
@@ -123,14 +123,15 @@ function App() {
           return;
       }
       const value = await web3.utils.toWei(betAmount, "ether");
-      const payoutForThisBet = payouts[betType] * value;
-      let provisionalBalance = necessaryBalance + payoutForThisBet + winnings;
+      const payoutForThisBet = parseFloat(payouts[betType]) * (parseFloat(value)/1000000000000000000);
+      let provisionalBalance = parseFloat(necessaryBalance) + parseFloat(payoutForThisBet) + parseFloat(winnings);
   
        if (provisionalBalance >= currentBalance) {
-        provisionalBalance = 0;
         toast.error("Insufficient contract balance, please enter new lower bet amount");
+        provisionalBalance = 0;
         return; // Return early to cancel the submission
       }
+
       try {
       await contract.bet(number, betType,({
       from:account,
@@ -143,7 +144,7 @@ function App() {
         console.log(err)
         toast.error("Error placing bet.");
       }
-      setnecessaryBalance(necessaryBalance+payoutForThisBet);
+      setnecessaryBalance(parseFloat(necessaryBalance)+parseFloat(payoutForThisBet));
     const balance = await web3.eth.getBalance(contract.address);
       setBalance(web3.utils.fromWei(balance, "ether"))
     };
