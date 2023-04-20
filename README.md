@@ -9,6 +9,9 @@ Run the following commands to install needed packages:
   npm install react-toastify@7.0.4
   
 ```
+
+Start you ganache and add the truffle-config.js file
+
 Make sure your react version is v16.18.0 (run "node -v")
 
 # Starting the contract
