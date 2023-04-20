@@ -14,10 +14,16 @@ Start your ganache and add the truffle-config.js file
 
 Make sure your react version is v16.18.0 (run "node -v")
 
+Run 
+```
+  truffle migrate
+```
 # Starting the contract
 
   Run the following commands:
   ```
+  truffle console
+  
   const instance = await Roulette.deployed() -> this will deploy your contract
   
   instance.addEther({value: "5000000000000000000", from: accounts[0]}) -> this will add 5 ETH to the contract 
