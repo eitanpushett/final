@@ -81,7 +81,7 @@ function App() {
   }
 
 
-
+//loads balance
   useEffect(
     () => {
       const loadBalance = async () => {
@@ -92,7 +92,7 @@ function App() {
       web3Api.contract && loadBalance()
     },[web3Api, handleCashOut])
 
-
+// gets account
   useEffect(() => {
     const getAccount = async () => {
       const accounts = await window.ethereum.request({ method: 'eth_accounts' });
@@ -101,7 +101,7 @@ function App() {
     web3Api.web3 && getAccount();
   }, [web3Api.web3]);
 
-  
+// loads winning  
     useEffect(() => {
       const loadWinnigs = async () => {
         const {contract,web3} = web3Api
@@ -111,7 +111,8 @@ function App() {
   
       web3Api.contract && loadWinnigs();
     }, [web3Api,account,bets]);
-  
+ 
+//handles bets    
     const handleBet = async (event) => {
       event.preventDefault();
       const {contract,web3} = web3Api
