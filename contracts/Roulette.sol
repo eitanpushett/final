@@ -126,7 +126,7 @@ function getMaxBet() public view returns (uint) {
        A bet is valid when:
        1 - the value of the bet is correct (=betAmount)
        3 - the option betted is valid (don't bet on 37!)
-       4 - the bank has sufficient funds to pay the bet
+       3 - the bank has sufficient funds to pay the bet
     */
 
     
@@ -221,7 +221,7 @@ function getMaxBet() public view returns (uint) {
     delete bets;
     /* reset necessaryBalance */
     necessaryBalance = 0;
-    /* check if to much money in the bank */
+    /* check if to much money in the bank if there is then pull profits*/
     if (address(this).balance > maxAmountAllowedInTheBank) takeProfits();
     /* returns 'random' number to UI */
     emit RandomNumber(number);
@@ -235,7 +235,6 @@ function getLatestWinningNumber() public view returns (uint256) {
 
 
 function getWinners() public view returns (Winner[] memory) {
-
     return spinWinners;
 }
 
