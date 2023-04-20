@@ -162,6 +162,10 @@ function App() {
     
 
     const handleSpin = async () => {
+      if (bets.length < 1) {
+        toast.error("No bets have been input");
+        return; // Return early to cancel the submission
+      }
       const {contract,web3} = web3Api
       try {
         await contract.spinWheel({from: account});
