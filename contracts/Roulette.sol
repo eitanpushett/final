@@ -125,7 +125,6 @@ function getMaxBet() public view returns (uint) {
        /* 
        A bet is valid when:
        1 - the value of the bet is correct (=betAmount)
-       2 - betType is kblock.timestampn (between 0 and 2)
        3 - the option betted is valid (don't bet on 37!)
        4 - the bank has sufficient funds to pay the bet
     */
